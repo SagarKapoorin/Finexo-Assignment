@@ -77,8 +77,8 @@ This project consists of a frontend built with React, Material UI, and Tailwind 
 ## Deployment with PM2
 For running the backend in production mode using PM2:
 ```sh
-pm run build
-pm start
+npm run build
+npm run start
 ```
 
 ## Repository Link
