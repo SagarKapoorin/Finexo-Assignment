@@ -2,6 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import * as XLSX from 'xlsx';
 import { Upload, Trash2, X, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { uploadFile } from '../Api';
+import axios from 'axios';
+import { API_BASE_URL } from '../Api';
 
 //WorkFlow:  
 //file Upload->parse->show error(modal-message) or show data->delete row->import valid data->any relevant message
@@ -36,7 +39,25 @@ const FileImportPage=()=> {
   const onDrop=useCallback((given_Files: File[]) => {
     const file=given_Files[0];
     const reader=new FileReader();
-    reader.onload=(e) => {
+    reader.onload=async(e) => {
+      try{
+        const result=await uploadFile(file);
+        console.log(result);
+        if(true){
+          console.log(result.errors1.length)
+          if(result.errors1.length>0){
+            const errorMap: { [key: string]: Array<{ row: number; message: string }> } = {};
+
+            result.errors1.forEach((err: { sheet: string; row: number; field: string; message: string }) => {
+              if (!errorMap[err.sheet]) {
+                errorMap[err.sheet] = [];
+              }
+              errorMap[err.sheet].push({ row: err.row - 2, message: err.message }); // Adjust row index
+            });
+            setselect(Object.keys(errorMap)[0]);
+            setModalOpen(Object.keys(errorMap).length > 0);
+            setErrors(errorMap);
+          }
         //getting muliple sheedts from excel file
       const data=new Uint8Array(e.target?.result as ArrayBuffer);
       //need to convert array buffer to UInt8Array to read the data
@@ -52,8 +73,14 @@ const FileImportPage=()=> {
         sheetData[s]=XLSX.utils.sheet_to_json(worksheet, { raw: false });
       });
       setSheets(sheetData);
+
       setthisSheet(workbook.SheetNames[0]);
-      backend(sheetData);
+    }else{
+    
+    }
+    }catch(error){
+      setImportResult({ success: false, message: error as string });
+    }
     };
     reader.readAsArrayBuffer(file);
   }, []);
@@ -64,27 +91,27 @@ const FileImportPage=()=> {
     },
     maxSize: 2097152,
   });
-  const backend=async (data: any) => {
-      console.log(data);
-    const the_errors={
-      'Sheet1': [{ row: 2, message: 'Invalid email format' }],
-      'Sheet2': [{ row: 5, message: 'Missing required field' }]
-    };
-       setErrors(the_errors);
-      setselect(Object.keys(the_errors)[0]);
-    setModalOpen(Object.keys(the_errors).length > 0);
-  };
-  const delete_Row=(sheet: string,rowIndex:number) => {
-    //delete row
-    if (window.confirm('Are you sure you want to delete this row?')) {
-       setDeletedRows(prev => ({
+  const delete_Row = (sheet: string, rowIndex: number) => {
+    // delete row
+    setSheets(prev => {
+      const updatedSheet = prev[sheet].filter((_, index) => index !== rowIndex);
+      return {
         ...prev,
-        [sheet]: new Set([...(prev[sheet]||[]),rowIndex])
-      }));
-    }
+        [sheet]: updatedSheet
+      };
+    });
+  
+    setDeletedRows(prev => {
+      const updatedSet = new Set(prev[sheet] || []);
+      updatedSet.add(rowIndex);
+      return {
+        ...prev,
+        [sheet]: updatedSet
+      };
+    });
   };
 
-  const import_it =() => { //importing only non error and valid data
+  const import_it =async() => { //importing only non error and valid data
         const validRows=Object.entries(sheets).reduce((acc, [sheetName, rows])=>{
       acc[sheetName] = rows.filter((_, index) => 
         !deletedRows[sheetName]?.has(index) && !errors[sheetName]?.some(e => e.row === index)
@@ -92,7 +119,12 @@ const FileImportPage=()=> {
       return acc;
     },{}as{[key: string]: any[]});
         console.log('Importing:', validRows);
+        const result = await axios.post(`${API_BASE_URL}/import`, validRows);
+        if(result.data.success){
     setImportResult({ success: true, message: 'Data imported successfully' });
+        }else{
+    setImportResult({ success: false, message: 'Data import failed' });
+        }
   };
   const formatDate = (date: Date) => date.toLocaleDateString('en-IN');
     const formatNumber = (num: number) => num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
@@ -140,46 +172,47 @@ const FileImportPage=()=> {
             </div>
             <div className="overflow-x-auto">
                 {/* data show and manupilate */}
-               <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                            {Object.keys(sheets[thisSheet][0]).map((header)=>(
+                    {Object.keys(sheets[thisSheet][0]).map((header) => (
                       <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {header}
                       </th>
                     ))}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
+                      Actions
                     </th>
                   </tr>
                 </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200">
                   {sheets[thisSheet]
                     .slice(page * row_Page, (page + 1) * row_Page)
-                        .map((row, index) => (
-                      <tr 
+                    .map((row, index) => (
+                      <tr
                         key={index}
-                        className={errors[thisSheet]?.some(e =>e.row === index) //error handling part
-                          ? 'bg-red-50' //show red if error
+                        className={errors[thisSheet]?.some(e => e.row === index) // error handling part
+                          ? 'bg-red-50' // show red if error
                           : 'hover:bg-gray-50'}>
-                        {Object.values(row).map((value,i) => (
+                        {Object.keys(sheets[thisSheet][0]).map((key, i) => (
                           <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                 {value instanceof Date ? formatDate(value) : 
-                             typeof value === 'number' ? formatNumber(value) : value as React.ReactNode}
+                            {row[key] instanceof Date ? formatDate(row[key]) : 
+                            typeof row[key] === 'number' ? formatNumber(row[key]) : 
+                            row[key] ? row[key] : <span>&nbsp;</span>}
                           </td>
-                           ))}
-                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                           <button
+                        ))}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <button
                             onClick={() => delete_Row(thisSheet, index)}
-                             className="text-red-600 hover:text-red-900"
-                           >
-                                     <Trash2 className="w-5 h-5" />
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </td>
                       </tr>
                     ))}
-                 </tbody>
-                 </table>
+                </tbody>
+              </table>
             </div>
             <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
                   <div className="flex items-center">
