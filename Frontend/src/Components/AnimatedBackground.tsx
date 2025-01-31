@@ -17,7 +17,7 @@ export const AnimatedBackground: React.FC = () => {
   const animationFrameId = useRef<number>();
 
   const createParticles = (width: number, height: number) => {
-    const particleCount = Math.floor((width * height) / 7000);
+    const particleCount = Math.floor((width * height) / 15000);
     return Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -25,7 +25,7 @@ export const AnimatedBackground: React.FC = () => {
       speedX: Math.random() * 1 - 0.5,
       speedY: Math.random() * 1 - 0.5,
       opacity: Math.random() * 0.5 + 0.2,
-      hue: Math.random() * 60 + 120, 
+      hue: Math.random() * 0 + 350, 
     }));
   };
 
