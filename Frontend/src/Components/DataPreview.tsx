@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { Upload, Trash2, X, FileSpreadsheet, AlertCircle } from 'lucide-react';
 
 //WorkFlow:  
-//file Upload->parse->show error or show data->delete row->import valid data->any relevant message
+//file Upload->parse->show error(modal-message) or show data->delete row->import valid data->any relevant message
 
 //TabPanel component
 function TabPanel(props:{children: React.ReactNode;value: string;select: string;}) {
@@ -93,29 +93,29 @@ const FileImportPage=()=> {
   const formatDate = (date: Date) => date.toLocaleDateString('en-IN');
     const formatNumber = (num: number) => num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-transparent p-8 z-10 relative">
+      <div className="max-w-7xl mx-auto bg-gray-40">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Excel Data Import</h1>
-          <p className="text-gray-600">Upload your Excel file to import data into the system</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2"><span className='text-green-700'>Excel </span>Data Import</h1>
+          <p className="text-gray-600">Upload your <span className='text-green-700'>Excel </span> file to import data into the system</p>
         </div>
     {/* //file upload section */}
         <div 
           {...getRootProps()} 
           className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
-            ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+            ${isDragActive ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-400'}`}
         >
           <input {...getInputProps()} />
-          <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 text-green-700" />
               {isDragActive ? (
-            <p className="text-lg text-blue-600 font-medium">Drop your Excel file here</p>
+            <p className="text-lg text-green-600 font-medium">Drop your <span className='text-green-700'>Excel </span> file here</p>
           ) : (
                 <div>
               <p className="text-lg text-gray-700 font-medium mb-2">
-                    Drag and drop your Excel file here
+                    Drag and drop your <span className='text-green-700'>Excel </span> file here
               </p>
               <p className="text-sm text-gray-500">
-                or click to browse (XLSX files only, max 2MB)
+                or click to browse (<span className='text-green-700'>.xlxs</span> files only, max 2MB)
               </p>
             </div>
           )}
@@ -127,7 +127,7 @@ const FileImportPage=()=> {
               <select
                     value={thisSheet}
                 onChange={(e) => setthisSheet(e.target.value)}
-                className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
               >
                     {Object.keys(sheets).map((sheet) => (
                   <option key={sheet} value={sheet}>{sheet}</option>
@@ -185,7 +185,7 @@ const FileImportPage=()=> {
                     setrow_Page(parseInt(e.target.value, 10));
                     setPage(0);
                   }}
-                  className="mr-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mr-2 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                 >
                   {[10, 25, 50].map((value) => (
                     <option key={value} value={value}>
@@ -217,7 +217,7 @@ const FileImportPage=()=> {
                 <div className="p-6 border-t border-gray-200">
               <button
                     onClick={import_it}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Import Valid Data
@@ -248,7 +248,7 @@ const FileImportPage=()=> {
                       onClick={() => setselect(sheet)}
                       className={`px-4 py-2 text-sm font-medium border-b-2 ${
                         select === sheet
-                          ? 'border-blue-500 text-blue-600'
+                          ? 'border-green-500 text-green-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                     >
@@ -280,7 +280,7 @@ const FileImportPage=()=> {
                      <div className="px-6 py-4 border-t border-gray-200">
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="w-full inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="w-full inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 >
                   Close
                 </button>
@@ -300,7 +300,7 @@ const FileImportPage=()=> {
                 <div className="ml-4 flex-shrink-0">
                   <button
                     onClick={() => setImportResult(null)}
-                    className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
                     <X className="h-5 w-5" />
                           </button>
