@@ -37,13 +37,17 @@ const FileImportPage=()=> {
     const file=given_Files[0];
     const reader=new FileReader();
     reader.onload=(e) => {
+        //getting muliple sheedts from excel file
       const data=new Uint8Array(e.target?.result as ArrayBuffer);
+      //need to convert array buffer to UInt8Array to read the data
       const workbook=XLSX.read(data,{ type:'array',cellDates:true});
+      //UInt8Array to workbook
       const sheetData:{[key: string]:any[]}={};
     //   console.log(data);
     //   console.log(workbook);
       console.log(sheetData);
       workbook.SheetNames.forEach((s)=>{
+        //accessing each sheet then convert to json
         const worksheet=workbook.Sheets[s];
         sheetData[s]=XLSX.utils.sheet_to_json(worksheet, { raw: false });
       });
